@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>My Favorite Links</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #003366;
+        }
+        h2 {
+            color: #004080;
+            border-bottom: 2px solid #003366;
+            padding-bottom: 5px;
+        }
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        a {
+            color: #1a73e8;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+   <script>
+    function recordVisit(linkName) {
+        const now = new Date().toLocaleString();
+        localStorage.setItem(linkName, now);
+    }
+
+    function copyToClipboard() {
+        const textArea = document.getElementById("copyText");
+        textArea.select();
+        textArea.setSelectionRange(0, 99999); // For mobile compatibility
+        document.execCommand("copy");
+
+        alert("Text copied to clipboard!");
+    }
+async function decryptAndCopy() {
+    const password = document.getElementById("decryptPassword").value;
+    const base64Data = document.getElementById("encryptedData").value;
+
+    const encryptedBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+
+    const salt = encryptedBytes.slice(0, 16); // First 16 bytes
+    const iv = encryptedBytes.slice(16, 28);  // Next 12 bytes
+    const ciphertext = encryptedBytes.slice(28); // Remainder
+
+    const enc = new TextEncoder();
+    const encodedPassword = enc.encode(password);
+
+    try {
+        const keyMaterial = await window.crypto.subtle.importKey(
+            "raw",
+            encodedPassword,
+            { name: "PBKDF2" },
+            false,
+            ["deriveKey"]
+        );
+
+        const key = await window.crypto.subtle.deriveKey(
+            {
+                name: "PBKDF2",
+                salt: salt,
+                iterations: 100000,
+                hash: "SHA-256"
+            },
+            keyMaterial,
+            { name: "AES-GCM", length: 256 },
+            false,
+            ["decrypt"]
+        );
+
+        const decrypted = await window.crypto.subtle.decrypt(
+            {
+                name: "AES-GCM",
+                iv: iv
+            },
+            key,
+            ciphertext
+        );
+
+        const dec = new TextDecoder();
+        const plaintext = dec.decode(decrypted);
+
+        await navigator.clipboard.writeText(plaintext);
+        alert("Text copied to clipboard!");
+    } catch (e) {
+        // If decryption fails, just copy the failed/jumbled text
+        const dec = new TextDecoder();
+        const junk = dec.decode(ciphertext.slice(0, 100)); // limit to avoid huge errors
+        await navigator.clipboard.writeText(junk);
+        alert("Incorrect password (or corrupted data). Junk text copied.");
+    }
+}
+
+</script>
+</head>
+<body>
+    <h1>My Frequently Used Sites</h1>
+
+    <h2>Work</h2>
+    <ul>
+        <li><a href="https://msada.dc3n.navy.mil/MSADAWeb/default.aspx" target="_blank" onclick="recordVisit('CRANE')">CRANE</a></li>
+        <li><a href="https://ntmpsweb.dc3n.navy.mil/fltmps/" target="_blank" onclick="recordVisit('FLTMPS')">FLTMPS</a></li>
+        <li><a href="https://intelshare.intelink.gov/sites/ATGToolbox/_layouts/15/start.aspx" target="_blank" onclick="recordVisit('ATG Toolbox')">ATG Toolbox</a></li>
+        <li><a href="https://toris.dc3n.navy.mil/my.policy" target="_blank" onclick="recordVisit('TORIS')">TORIS</a></li>
+        <li><a href="https://nossa.dc3n.navy.mil/" target="_blank" onclick="recordVisit('NOSSA')">NOSSA</a></li>
+        <li><a href="https://flankspeed.sharepoint-mil.us/sites/Flank_Speed_Hub" target="_blank" onclick="recordVisit('Flank Speed')">Flank Speed</a></li>
+        <li><a href="https://my.navy.mil/quick-links.html" target="_blank" onclick="recordVisit('Flank Speed')">Quick Links</a></li>
+    </ul>
+
+    <h2>Education</h2>
+    <ul>
+        <li><a href="https://myportal.ccis.edu/dashboard" target="_blank" onclick="recordVisit('CCIS')">CCIS</a></li>
+        <li><a href="https://myeducation.netc.navy.mil/webta/home.html#nbb" target="_blank" onclick="recordVisit('Web TA')">Web TA</a></li>
+        <li><a href="https://usmap.netc.navy.mil/usmap/login" target="_blank" onclick="recordVisit('USMAP')">USMAP</a></li>
+    </ul>
+
+    <h2>Other</h2>
+    <ul>
+        <li><a href="https://tricare-bene.triwest.com/" target="_blank" onclick="recordVisit('TRICARE')">TRICARE-BENE</a></li>
+        <li><a href="https://triwest.healthsparq.com/healthsparq/public/#/one/city=&state=&postalCode=&country=&insurerCode=TRIWEST_I&brandCode=TRIWEST?" target="_blank" onclick="recordVisit('TRICARE-APPT')">TRICARE-APPT</a></li>
+        <!-- Add other categories/links here if needed -->
+    </ul>
+
+
+<h2>Copy</h2>
+
+<p>Share Drive:</p>
+<input type="password" id="decryptPassword" placeholder="Enter password" />
+<button onclick="decryptAndCopy()">Copy</button>
+<!-- Encrypted data (base64 string of salt + iv + ciphertext) -->
+<!-- Replace the value below with your actual encrypted content -->
+<input type="hidden" id="encryptedData" value="b7hV9yjwrwleVaBMGuq9yGrI34mK5yMsH+K8NwRvLLjTaB45UR3OkErkD5QPQjblrfvjLwo5S0vrsfZzLInOt208B4xo+g9XA9Fx2ljm9uNmVJXzzu5hFPsIm8NJqrinXyCiyZvhxA2s" />
+<br>
+<p>Printer:</p>
+<input type="password" id="decryptPassword" placeholder="Enter password" />
+<button onclick="decryptAndCopy()">Copy</button>
+<!-- Encrypted data (base64 string of salt + iv + ciphertext) -->
+<!-- Replace the value below with your actual encrypted content -->
+<input type="hidden" id="encryptedData" value="cuSSlUbzBH53QH/lVjqkK1DljSj9YvY/ECJjK3FSHEISTpKhUTkA6oitjEeV004aSVZg/Hh2ggoBig==" />
+<br><br>
+</body>
+</html>
