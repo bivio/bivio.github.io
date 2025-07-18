@@ -38,29 +38,26 @@
         localStorage.setItem(linkName, now);
     }
 
-    function copyToClipboard() {
-        const textArea = document.getElementById("copyText");
-        textArea.select();
-        textArea.setSelectionRange(0, 99999); // For mobile compatibility
-        document.execCommand("copy");
+    async function decryptAndCopy(buttonEl) {
+    const passwordInput = buttonEl.previousElementSibling;
+    const password = passwordInput.value;
+    const base64Data = buttonEl.getAttribute("data-encrypted");
 
-        alert("Text copied to clipboard!");
+    if (!password || !base64Data) {
+        alert("Missing password or data.");
+        return;
     }
-async function decryptAndCopy() {
-    const password = document.getElementById("decryptPassword").value;
-    const base64Data = document.getElementById("encryptedData").value;
 
     const encryptedBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-
-    const salt = encryptedBytes.slice(0, 16); // First 16 bytes
-    const iv = encryptedBytes.slice(16, 28);  // Next 12 bytes
-    const ciphertext = encryptedBytes.slice(28); // Remainder
+    const salt = encryptedBytes.slice(0, 16);
+    const iv = encryptedBytes.slice(16, 28);
+    const ciphertext = encryptedBytes.slice(28);
 
     const enc = new TextEncoder();
     const encodedPassword = enc.encode(password);
 
     try {
-        const keyMaterial = await window.crypto.subtle.importKey(
+        const keyMaterial = await crypto.subtle.importKey(
             "raw",
             encodedPassword,
             { name: "PBKDF2" },
@@ -68,7 +65,7 @@ async function decryptAndCopy() {
             ["deriveKey"]
         );
 
-        const key = await window.crypto.subtle.deriveKey(
+        const key = await crypto.subtle.deriveKey(
             {
                 name: "PBKDF2",
                 salt: salt,
@@ -81,11 +78,8 @@ async function decryptAndCopy() {
             ["decrypt"]
         );
 
-        const decrypted = await window.crypto.subtle.decrypt(
-            {
-                name: "AES-GCM",
-                iv: iv
-            },
+        const decrypted = await crypto.subtle.decrypt(
+            { name: "AES-GCM", iv: iv },
             key,
             ciphertext
         );
@@ -94,13 +88,10 @@ async function decryptAndCopy() {
         const plaintext = dec.decode(decrypted);
 
         await navigator.clipboard.writeText(plaintext);
-        alert("Text copied to clipboard!");
+        alert("Decrypted and copied to clipboard!");
     } catch (e) {
-        // If decryption fails, just copy the failed/jumbled text
-        const dec = new TextDecoder();
-        const junk = dec.decode(ciphertext.slice(0, 100)); // limit to avoid huge errors
-        await navigator.clipboard.writeText(junk);
-        alert("Incorrect password (or corrupted data). Junk text copied.");
+        await navigator.clipboard.writeText("Decryption failed.");
+        alert("Incorrect password or corrupted data.");
     }
 }
 
@@ -138,18 +129,13 @@ async function decryptAndCopy() {
 <h2>Copy</h2>
 
 <p>Share Drive:</p>
-<input type="password" id="decryptPassword" placeholder="Enter password" />
-<button onclick="decryptAndCopy()">Copy</button>
-<!-- Encrypted data (base64 string of salt + iv + ciphertext) -->
-<!-- Replace the value below with your actual encrypted content -->
-<input type="hidden" id="encryptedData" value="b7hV9yjwrwleVaBMGuq9yGrI34mK5yMsH+K8NwRvLLjTaB45UR3OkErkD5QPQjblrfvjLwo5S0vrsfZzLInOt208B4xo+g9XA9Fx2ljm9uNmVJXzzu5hFPsIm8NJqrinXyCiyZvhxA2s" />
-<br>
+<!-- First button -->
+<input type="password" placeholder="Enter password" />
+<button onclick="decryptAndCopy(this)" data-encrypted="x5SlvoeBssoTKdTbgnqldEEOefkoPEOEMGEU9O8jCTqYa+WhtgRx4VppCKDMmsHNb8xosm7sPtOO6idBeKsm+Aux7yGPvnKzC9sbcBu/me2VT7FWDBYUPQo29dk=">Copy</button>
 <p>Printer:</p>
-<input type="password" id="decryptPassword" placeholder="Enter password" />
-<button onclick="decryptAndCopy()">Copy</button>
-<!-- Encrypted data (base64 string of salt + iv + ciphertext) -->
-<!-- Replace the value below with your actual encrypted content -->
-<input type="hidden" id="encryptedData" value="cuSSlUbzBH53QH/lVjqkK1DljSj9YvY/ECJjK3FSHEISTpKhUTkA6oitjEeV004aSVZg/Hh2ggoBig==" />
+<!-- Second button -->
+<input type="password" placeholder="Enter password" />
+<button onclick="decryptAndCopy(this)" data-encrypted="base64string...">Copy</button>
 <br><br>
 </body>
 </html>
