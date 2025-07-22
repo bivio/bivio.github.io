@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Text Encryptor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f4f8;
+        }
+        textarea, input[type="password"] {
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 1em;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        label {
+            font-weight: bold;
+        }
+        #output {
+            background-color: #eef;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <h1>Password-Based AES Encryption Tool</h1>
+
+    <label for="plaintext">Text to Encrypt:</label>
+    <textarea id="plaintext" rows="6" placeholder="Enter sensitive text here..."></textarea>
+
+    <label for="password">Encryption Password:</label>
+    <input type="password" id="password" placeholder="Enter a strong password" />
+
+    <button onclick="encryptText()">Encrypt</button>
+
+    <h3>Encrypted Output (Base64)</h3>
+    <textarea id="output" rows="6" readonly placeholder="Encrypted text will appear here..."></textarea>
+
+    <script>
+    async function encryptText() {
+        const text = document.getElementById("plaintext").value;
+        const password = document.getElementById("password").value;
+
+        if (!text || !password) {
+            alert("Both text and password are required.");
+            return;
+        }
+
+        const enc = new TextEncoder();
+        const encodedText = enc.encode(text);
+        const encodedPassword = enc.encode(password);
+
+        // Derive a key using PBKDF2
+        const keyMaterial = await crypto.subtle.importKey(
+            "raw",
+            encodedPassword,
+            { name: "PBKDF2" },
+            false,
+            ["deriveKey"]
+        );
+
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+
+        const key = await crypto.subtle.deriveKey(
+            {
+                name: "PBKDF2",
+                salt: salt,
+                iterations: 100000,
+                hash: "SHA-256"
+            },
+            keyMaterial,
+            { name: "AES-GCM", length: 256 },
+            false,
+            ["encrypt"]
+        );
+
+        const encrypted = await crypto.subtle.encrypt(
+            { name: "AES-GCM", iv: iv },
+            key,
+            encodedText
+        );
+
+        // Combine salt + iv + encrypted
+        const combined = new Uint8Array(salt.length + iv.length + encrypted.byteLength);
+        combined.set(salt, 0);
+        combined.set(iv, salt.length);
+        combined.set(new Uint8Array(encrypted), salt.length + iv.length);
+
+        // Convert to Base64
+        const base64Encrypted = btoa(String.fromCharCode(...combined));
+        document.getElementById("output").value = base64Encrypted;
+    }
+    </script>
+</body>
+</html>
