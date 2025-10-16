@@ -39,63 +39,62 @@
     }
 
     async function decryptAndCopy(buttonEl) {
-    const passwordInput = buttonEl.previousElementSibling;
-    const password = passwordInput.value;
-    const base64Data = buttonEl.getAttribute("data-encrypted");
+        const passwordInput = buttonEl.previousElementSibling;
+        const password = passwordInput.value;
+        const base64Data = buttonEl.getAttribute("data-encrypted");
 
-    if (!password || !base64Data) {
-        alert("Missing password or data.");
-        return;
+        if (!password || !base64Data) {
+            alert("Missing password or data.");
+            return;
+        }
+
+        const encryptedBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+        const salt = encryptedBytes.slice(0, 16);
+        const iv = encryptedBytes.slice(16, 28);
+        const ciphertext = encryptedBytes.slice(28);
+
+        const enc = new TextEncoder();
+        const encodedPassword = enc.encode(password);
+
+        try {
+            const keyMaterial = await crypto.subtle.importKey(
+                "raw",
+                encodedPassword,
+                { name: "PBKDF2" },
+                false,
+                ["deriveKey"]
+            );
+
+            const key = await crypto.subtle.deriveKey(
+                {
+                    name: "PBKDF2",
+                    salt: salt,
+                    iterations: 100000,
+                    hash: "SHA-256"
+                },
+                keyMaterial,
+                { name: "AES-GCM", length: 256 },
+                false,
+                ["decrypt"]
+            );
+
+            const decrypted = await crypto.subtle.decrypt(
+                { name: "AES-GCM", iv: iv },
+                key,
+                ciphertext
+            );
+
+            const dec = new TextDecoder();
+            const plaintext = dec.decode(decrypted);
+
+            await navigator.clipboard.writeText(plaintext);
+            alert("Decrypted and copied to clipboard!");
+        } catch (e) {
+            await navigator.clipboard.writeText("Decryption failed.");
+            alert("Incorrect password or corrupted data.");
+        }
     }
-
-    const encryptedBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-    const salt = encryptedBytes.slice(0, 16);
-    const iv = encryptedBytes.slice(16, 28);
-    const ciphertext = encryptedBytes.slice(28);
-
-    const enc = new TextEncoder();
-    const encodedPassword = enc.encode(password);
-
-    try {
-        const keyMaterial = await crypto.subtle.importKey(
-            "raw",
-            encodedPassword,
-            { name: "PBKDF2" },
-            false,
-            ["deriveKey"]
-        );
-
-        const key = await crypto.subtle.deriveKey(
-            {
-                name: "PBKDF2",
-                salt: salt,
-                iterations: 100000,
-                hash: "SHA-256"
-            },
-            keyMaterial,
-            { name: "AES-GCM", length: 256 },
-            false,
-            ["decrypt"]
-        );
-
-        const decrypted = await crypto.subtle.decrypt(
-            { name: "AES-GCM", iv: iv },
-            key,
-            ciphertext
-        );
-
-        const dec = new TextDecoder();
-        const plaintext = dec.decode(decrypted);
-
-        await navigator.clipboard.writeText(plaintext);
-        alert("Decrypted and copied to clipboard!");
-    } catch (e) {
-        await navigator.clipboard.writeText("Decryption failed.");
-        alert("Incorrect password or corrupted data.");
-    }
-}
-
-</script>
+    </script>
 </head>
 <body>
     <h1>My Frequently Used Sites</h1>
@@ -108,8 +107,10 @@
         <li><a href="https://toris.dc3n.navy.mil/my.policy" target="_blank" onclick="recordVisit('TORIS')">TORIS</a></li>
         <li><a href="https://nossa.dc3n.navy.mil/" target="_blank" onclick="recordVisit('NOSSA')">NOSSA</a></li>
         <li><a href="https://flankspeed.sharepoint-mil.us/sites/Flank_Speed_Hub" target="_blank" onclick="recordVisit('Flank Speed')">Flank Speed</a></li>
-        <li><a href="https://my.navy.mil/quick-links.html" target="_blank" onclick="recordVisit('Flank Speed')">Quick Links</a></li>
-        <li><a href="http://www.braceenterprise.com/USCG_weapons-navsea(active).html">Brace Enterprises - Open Purchase Stickers</li>
+        <li><a href="https://my.navy.mil/quick-links.html" target="_blank" onclick="recordVisit('Quick Links')">Quick Links</a></li>
+        <li><a href="http://www.braceenterprise.com/USCG_weapons-navsea(active).html" target="_blank" onclick="recordVisit('Brace Enterprises')">Brace Enterprises - Open Purchase Stickers</a></li>
+        <li><a href="https://flankspeed.sharepoint-mil.us/sites/CPF-CNSP-ATG-Share/ATG-SAN-DIEGO" target="_blank" onclick="recordVisit('ATG San Diego Share')">ATG San Diego Share</a></li>
+        <li><a href="https://flankspeed.sharepoint-mil.us/sites/atgsd_n802_vbss" target="_blank" onclick="recordVisit('ATG VBSS Share')">ATG VBSS Share</a></li>
     </ul>
 
     <h2>Education</h2>
@@ -125,24 +126,18 @@
         <li><a href="https://triwest.healthsparq.com/healthsparq/public/#/one/city=&state=&postalCode=&country=&insurerCode=TRIWEST_I&brandCode=TRIWEST?" target="_blank" onclick="recordVisit('TRICARE-APPT')">TRICARE-APPT</a></li>
         <li><a href="https://informatics-stage.health.mil/DAP/" target="_blank" onclick="recordVisit('DAP')">Digital Appointment Portal</a></li>
         <li><a href="https://patientportal.mhsgenesis.health.mil/" target="_blank">MHS Genesis Portal</a></li>
-        <!-- Add other categories/links here if needed -->
     </ul>
 
+    <h2>Copy</h2>
 
-<h2>Copy</h2>
+    <p>Share Drive:</p>
+    <input type="password" placeholder="Enter password" />
+    <button onclick="decryptAndCopy(this)" data-encrypted="0zLPdCM+qk67IQZlxbA4nr/tmQkuyr4PiCUf+yL28Frz4Z39po2AKVc92wUqQabk+7+06VDzxOu7DGm534i22YO/2UBizjfJtDnag1Gx61wOFg==">Copy</button>
 
-<p>Share Drive:</p>
-<!-- First button -->
-<input type="password" placeholder="Enter password" />
-<button onclick="decryptAndCopy(this)" data-encrypted="0zLPdCM+qk67IQZlxbA4nr/tmQkuyr4PiCUf+yL28Frz4Z39po2AKVc92wUqQabk+7+06VDzxOu7DGm534i22YO/2UBizjfJtDnag1Gx61wOFg==">Copy</button>
-<p>Printer:</p>
-<!-- Second button -->
-<input type="password" placeholder="Enter password" />
-<button onclick="decryptAndCopy(this)" data-encrypted="KT0KgG3yhOPv86JWhAASN7qDbjxCeuWCxmfy0Onf9b2jI0FDwXm/8hExTf+wD+aCAWFbawXfXOWXdTaK4dJ3vQRmZtdUQbSR1w==">Copy</button>
-<br><br>
+    <p>Printer:</p>
+    <input type="password" placeholder="Enter password" />
+    <button onclick="decryptAndCopy(this)" data-encrypted="KT0KgG3yhOPv86JWhAASN7qDbjxCeuWCxmfy0Onf9b2jI0FDwXm/8hExTf+wD+aCAWFbawXfXOWXdTaK4dJ3vQRmZtdUQbSR1w==">Copy</button>
+
+    <br><br>
 </body>
 </html>
-
-
-
-
