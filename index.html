@@ -83,5 +83,78 @@
                 keyMaterial,
                 { name: "AES-GCM", length: 256 },
                 false,
-                ["decr]()
+                ["decrypt"]
+            );
 
+            const decrypted = await crypto.subtle.decrypt(
+                { name: "AES-GCM", iv: iv },
+                key,
+                ciphertext
+            );
+
+            const dec = new TextDecoder();
+            const plaintext = dec.decode(decrypted);
+
+            await navigator.clipboard.writeText(plaintext);
+            alert("Decrypted and copied to clipboard!");
+        } catch (e) {
+            await navigator.clipboard.writeText("Decryption failed.");
+            alert("Incorrect password or corrupted data.");
+        }
+    }
+    </script>
+</head>
+<body>
+    <h1>My Frequently Used Sites</h1>
+
+    <h2>Work</h2>
+    <ul>
+        <li><a href="https://msada.dc3n.navy.mil/MSADAWeb/default.aspx" target="_blank" onclick="recordVisit('CRANE')">CRANE</a></li>
+        <li><a href="https://ntmpsweb.dc3n.navy.mil/fltmps/" target="_blank" onclick="recordVisit('FLTMPS')">FLTMPS</a></li>
+        <li><a href="https://intelshare.intelink.gov/sites/ATGToolbox/_layouts/15/start.aspx" target="_blank" onclick="recordVisit('ATG Toolbox')">ATG Toolbox</a></li>
+        <li><a href="https://toris.dc3n.navy.mil/my.policy" target="_blank" onclick="recordVisit('TORIS')">TORIS</a></li>
+        <li><a href="https://nossa.dc3n.navy.mil/" target="_blank" onclick="recordVisit('NOSSA')">NOSSA</a></li>
+        <li><a href="https://flankspeed.sharepoint-mil.us/sites/Flank_Speed_Hub" target="_blank" onclick="recordVisit('Flank Speed')">Flank Speed</a></li>
+        <li><a href="https://my.navy.mil/quick-links.html" target="_blank" onclick="recordVisit('Quick Links')">Quick Links</a></li>
+        <li><a href="http://www.braceenterprise.com/USCG_weapons-navsea(active).html" target="_blank" onclick="recordVisit('Brace Enterprises')">Brace Enterprises - Open Purchase Stickers</a></li>
+        <li><a href="https://flankspeed.sharepoint-mil.us/sites/CPF-CNSP-ATG-Share/ATG-SAN-DIEGO" target="_blank" onclick="recordVisit('ATG San Diego Share')">ATG San Diego Share</a></li>
+        <li><a href="https://flankspeed.sharepoint-mil.us/sites/atgsd_n802_vbss" target="_blank" onclick="recordVisit('ATG VBSS Share')">ATG VBSS Share</a></li>
+    </ul>
+
+    <h2>Education</h2>
+    <div class="section-row">
+        <div class="subsection">
+            <ul>
+                <li><a href="https://myeducation.netc.navy.mil/webta/home.html#nbb" target="_blank" onclick="recordVisit('Web TA')">Web TA</a></li>
+                <li><a href="https://usmap.netc.navy.mil/usmap/login" target="_blank" onclick="recordVisit('USMAP')">USMAP</a></li>
+            </ul>
+        </div>
+        <div class="subsection">
+            <ul>
+                <li><a href="https://myportal.ccis.edu/dashboard" target="_blank" onclick="recordVisit('CCIS')">CCIS</a></li>
+                <li><a href="https://ccis.ucourses.com/" target="_blank" onclick="recordVisit('D2L')">D2L</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <h2>Other</h2>
+    <ul>
+        <li><a href="https://tricare-bene.triwest.com/" target="_blank" onclick="recordVisit('TRICARE')">TRICARE-BENE</a></li>
+        <li><a href="https://triwest.healthsparq.com/healthsparq/public/#/one/city=&state=&postalCode=&country=&insurerCode=TRIWEST_I&brandCode=TRIWEST?" target="_blank" onclick="recordVisit('TRICARE-APPT')">TRICARE-APPT</a></li>
+        <li><a href="https://informatics-stage.health.mil/DAP/" target="_blank" onclick="recordVisit('DAP')">Digital Appointment Portal</a></li>
+        <li><a href="https://patientportal.mhsgenesis.health.mil/" target="_blank">MHS Genesis Portal</a></li>
+    </ul>
+
+    <h2>Copy</h2>
+
+    <p>Share Drive:</p>
+    <input type="password" placeholder="Enter password" />
+    <button onclick="decryptAndCopy(this)" data-encrypted="0zLPdCM+qk67IQZlxbA4nr/tmQkuyr4PiCUf+yL28Frz4Z39po2AKVc92wUqQabk+7+06VDzxOu7DGm534i22YO/2UBizjfJtDnag1Gx61wOFg==">Copy</button>
+
+    <p>Printer:</p>
+    <input type="password" placeholder="Enter password" />
+    <button onclick="decryptAndCopy(this)" data-encrypted="KT0KgG3yhOPv86JWhAASN7qDbjxCeuWCxmfy0Onf9b2jI0FDwXm/8hExTf+wD+aCAWFbawXfXOWXdTaK4dJ3vQRmZtdUQbSR1w==">Copy</button>
+
+    <br><br>
+</body>
+</html>
