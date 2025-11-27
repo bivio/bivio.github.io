@@ -6,41 +6,154 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f9f9f9;
+            margin: 0;
+            background-color: #f4f6f8;
+            color: #222;
         }
-        h1 {
-            color: #003366;
+
+        header {
+            background: linear-gradient(135deg, #001f3f, #004080);
+            color: #fff;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
+
+        header .title-block {
+            display: flex;
+            flex-direction: column;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.2rem;
+        }
+
+        header p {
+            margin: 5px 0 0 0;
+            font-size: 0.95rem;
+            opacity: 0.9;
+        }
+
+        header .nav-links a {
+            color: #cce0ff;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 0.95rem;
+        }
+
+        header .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        main {
+            padding: 30px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .section-card {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 18px 18px 16px 18px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+
         h2 {
             color: #004080;
             border-bottom: 2px solid #003366;
-            padding-bottom: 5px;
+            padding-bottom: 4px;
+            margin-top: 0;
+            margin-bottom: 12px;
+            font-size: 1.2rem;
         }
+
         ul {
             list-style-type: none;
             padding-left: 0;
+            margin: 0;
         }
+
         li {
             margin-bottom: 10px;
         }
+
         a {
             color: #1a73e8;
             text-decoration: none;
         }
+
         a:hover {
             text-decoration: underline;
         }
+
+        /* Education two-column layout inside its card */
         .section-row {
             display: flex;
-            gap: 40px;
+            gap: 24px;
             align-items: flex-start;
+            flex-wrap: wrap;
         }
+
         .subsection {
             flex: 1;
+            min-width: 180px;
+        }
+
+        /* Copy section styling */
+        .copy-section p {
+            margin: 6px 0;
+            font-weight: 600;
+        }
+
+        .copy-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .copy-row input[type="password"] {
+            padding: 6px 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            min-width: 180px;
+        }
+
+        .copy-row button {
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            background-color: #004080;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .copy-row button:hover {
+            background-color: #002b55;
+        }
+
+        footer {
+            margin-top: 30px;
+            padding: 12px 30px 18px 30px;
+            background-color: #e1e5ea;
+            font-size: 0.85rem;
+            color: #333;
+            text-align: center;
         }
     </style>
-   <script>
+
+    <script>
     function recordVisit(linkName) {
         const now = new Date().toLocaleString();
         localStorage.setItem(linkName, now);
@@ -105,58 +218,98 @@
     </script>
 </head>
 <body>
-    <h1>My Frequently Used Sites</h1>
 
-    <h2>Work</h2>
-    <ul>
-        <li><a href="https://msada.dc3n.navy.mil/MSADAWeb/default.aspx" target="_blank" onclick="recordVisit('CRANE')">CRANE</a></li>
-        <li><a href="https://ntmpsweb.dc3n.navy.mil/fltmps/" target="_blank" onclick="recordVisit('FLTMPS')">FLTMPS</a></li>
-        <li><a href="https://intelshare.intelink.gov/sites/ATGToolbox/_layouts/15/start.aspx" target="_blank" onclick="recordVisit('ATG Toolbox')">ATG Toolbox</a></li>
-        <li><a href="https://toris.dc3n.navy.mil/my.policy" target="_blank" onclick="recordVisit('TORIS')">TORIS</a></li>
-        <li><a href="https://nossa.dc3n.navy.mil/" target="_blank" onclick="recordVisit('NOSSA')">NOSSA</a></li>
-        <li><a href="https://flankspeed.sharepoint-mil.us/sites/Flank_Speed_Hub" target="_blank" onclick="recordVisit('Flank Speed')">Flank Speed</a></li>
-        <li><a href="https://my.navy.mil/quick-links.html" target="_blank" onclick="recordVisit('Quick Links')">Quick Links</a></li>
-        <li><a href="http://www.braceenterprise.com/USCG_weapons-navsea(active).html" target="_blank" onclick="recordVisit('Brace Enterprises')">Brace Enterprises - Open Purchase Stickers</a></li>
-        <li><a href="https://flankspeed.sharepoint-mil.us/sites/CPF-CNSP-ATG-Share/ATG-SAN-DIEGO" target="_blank" onclick="recordVisit('ATG San Diego Share')">ATG San Diego Share</a></li>
-        <li><a href="https://flankspeed.sharepoint-mil.us/sites/atgsd_n802_vbss" target="_blank" onclick="recordVisit('ATG VBSS Share')">ATG VBSS Share</a></li>
-        <li><a href="vbss.html" target="_blank" onclick="recordVisit('VBSS Resources')">VBSS Resources</a></li>
-    </ul>
-
-    <h2>Education</h2>
-    <div class="section-row">
-        <div class="subsection">
-            <ul>
-                <li><a href="https://myeducation.netc.navy.mil/webta/home.html#nbb" target="_blank" onclick="recordVisit('Web TA')">Web TA</a></li>
-                <li><a href="https://usmap.netc.navy.mil/usmap/login" target="_blank" onclick="recordVisit('USMAP')">USMAP</a></li>
-            </ul>
-        </div>
-        <div class="subsection">
-            <ul>
-                <li><a href="https://myportal.ccis.edu/dashboard" target="_blank" onclick="recordVisit('CCIS')">CCIS</a></li>
-                <li><a href="https://ccis.ucourses.com/" target="_blank" onclick="recordVisit('D2L')">D2L</a></li>
-            </ul>
-        </div>
+<header>
+    <div class="title-block">
+        <h1>My Frequently Used Sites</h1>
+        <p>Quick access for work, school, and admin – ATG / VBSS friendly layout</p>
     </div>
+    <div class="nav-links">
+        <!-- Adjust vbss.html if your VBSS page has a different name -->
+        <a href="vbss.html" target="_blank">VBSS Resources &raquo;</a>
+    </div>
+</header>
 
-    <h2>Other</h2>
-    <ul>
-        <li><a href="https://tricare-bene.triwest.com/" target="_blank" onclick="recordVisit('TRICARE')">TRICARE-BENE</a></li>
-        <li><a href="https://triwest.healthsparq.com/healthsparq/public/#/one/city=&state=&postalCode=&country=&insurerCode=TRIWEST_I&brandCode=TRIWEST?" target="_blank" onclick="recordVisit('TRICARE-APPT')">TRICARE-APPT</a></li>
-        <li><a href="https://informatics-stage.health.mil/DAP/" target="_blank" onclick="recordVisit('DAP')">Digital Appointment Portal</a></li>
-        <li><a href="https://patientportal.mhsgenesis.health.mil/" target="_blank">MHS Genesis Portal</a></li>
-    </ul>
+<main>
+    <div class="section-grid">
+        <!-- Work card -->
+        <section class="section-card">
+            <h2>Work</h2>
+            <ul>
+                <li><a href="https://msada.dc3n.navy.mil/MSADAWeb/default.aspx" target="_blank" onclick="recordVisit('CRANE')">CRANE</a></li>
+                <li><a href="https://ntmpsweb.dc3n.navy.mil/fltmps/" target="_blank" onclick="recordVisit('FLTMPS')">FLTMPS</a></li>
+                <li><a href="https://intelshare.intelink.gov/sites/ATGToolbox/_layouts/15/start.aspx" target="_blank" onclick="recordVisit('ATG Toolbox')">ATG Toolbox</a></li>
+                <li><a href="https://toris.dc3n.navy.mil/my.policy" target="_blank" onclick="recordVisit('TORIS')">TORIS</a></li>
+                <li><a href="https://nossa.dc3n.navy.mil/" target="_blank" onclick="recordVisit('NOSSA')">NOSSA</a></li>
+                <li><a href="https://flankspeed.sharepoint-mil.us/sites/Flank_Speed_Hub" target="_blank" onclick="recordVisit('Flank Speed')">Flank Speed</a></li>
+                <li><a href="https://my.navy.mil/quick-links.html" target="_blank" onclick="recordVisit('Quick Links')">Quick Links</a></li>
+                <li><a href="http://www.braceenterprise.com/USCG_weapons-navsea(active).html" target="_blank" onclick="recordVisit('Brace Enterprises')">Brace Enterprises - Open Purchase Stickers</a></li>
+                <li><a href="https://flankspeed.sharepoint-mil.us/sites/CPF-CNSP-ATG-Share/ATG-SAN-DIEGO" target="_blank" onclick="recordVisit('ATG San Diego Share')">ATG San Diego Share</a></li>
+                <li><a href="https://flankspeed.sharepoint-mil.us/sites/atgsd_n802_vbss" target="_blank" onclick="recordVisit('ATG VBSS Share')">ATG VBSS Share</a></li>
+                <li><a href="vbss.html" target="_blank" onclick="recordVisit('VBSS Resources')">VBSS Resources (training page)</a></li>
+            </ul>
+        </section>
 
-    <h2>Copy</h2>
+        <!-- Education card -->
+        <section class="section-card">
+            <h2>Education</h2>
+            <div class="section-row">
+                <div class="subsection">
+                    <ul>
+                        <li><a href="https://myeducation.netc.navy.mil/webta/home.html#nbb" target="_blank" onclick="recordVisit('Web TA')">Web TA</a></li>
+                        <li><a href="https://usmap.netc.navy.mil/usmap/login" target="_blank" onclick="recordVisit('USMAP')">USMAP</a></li>
+                    </ul>
+                </div>
+                <div class="subsection">
+                    <ul>
+                        <li><a href="https://myportal.ccis.edu/dashboard" target="_blank" onclick="recordVisit('CCIS')">CCIS</a></li>
+                        <li><a href="https://ccis.ucourses.com/" target="_blank" onclick="recordVisit('D2L')">D2L</a></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
 
-    <p>Share Drive:</p>
-    <input type="password" placeholder="Enter password" />
-    <button onclick="decryptAndCopy(this)" data-encrypted="0zLPdCM+qk67IQZlxbA4nr/tmQkuyr4PiCUf+yL28Frz4Z39po2AKVc92wUqQabk+7+06VDzxOu7DGm534i22YO/2UBizjfJtDnag1Gx61wOFg==">Copy</button>
+        <!-- Other card -->
+        <section class="section-card">
+            <h2>Other</h2>
+            <ul>
+                <li><a href="https://tricare-bene.triwest.com/" target="_blank" onclick="recordVisit('TRICARE')">TRICARE-BENE</a></li>
+                <li><a href="https://triwest.healthsparq.com/healthsparq/public/#/one/city=&state=&postalCode=&country=&insurerCode=TRIWEST_I&brandCode=TRIWEST?" target="_blank" onclick="recordVisit('TRICARE-APPT')">TRICARE-APPT</a></li>
+                <li><a href="https://informatics-stage.health.mil/DAP/" target="_blank" onclick="recordVisit('DAP')">Digital Appointment Portal</a></li>
+                <li><a href="https://patientportal.mhsgenesis.health.mil/" target="_blank">MHS Genesis Portal</a></li>
+            </ul>
+        </section>
 
-    <p>Printer:</p>
-    <input type="password" placeholder="Enter password" />
-    <button onclick="decryptAndCopy(this)" data-encrypted="KT0KgG3yhOPv86JWhAASN7qDbjxCeuWCxmfy0Onf9b2jI0FDwXm/8hExTf+wD+aCAWFbawXfXOWXdTaK4dJ3vQRmZtdUQbSR1w==">Copy</button>
+        <!-- Copy card -->
+        <section class="section-card copy-section">
+            <h2>Copy</h2>
 
-    <br><br>
+            <div class="copy-row">
+                <p>Share Drive:</p>
+            </div>
+            <div class="copy-row">
+                <input type="password" placeholder="Enter password" />
+                <button onclick="decryptAndCopy(this)" data-encrypted="0zLPdCM+qk67IQZlxbA4nr/tmQkuyr4PiCUf+yL28Frz4Z39po2AKVc92wUqQabk+7+06VDzxOu7DGm534i22YO/2UBizjfJtDnag1Gx61wOFg==">
+                    Copy
+                </button>
+            </div>
+
+            <div class="copy-row">
+                <p>Printer:</p>
+            </div>
+            <div class="copy-row">
+                <input type="password" placeholder="Enter password" />
+                <button onclick="decryptAndCopy(this)" data-encrypted="KT0KgG3yhOPv86JWhAASN7qDbjxCeuWCxmfy0Onf9b2jI0FDwXm/8hExTf+wD+aCAWFbawXfXOWXdTaK4dJ3vQRmZtdUQbSR1w==">
+                    Copy
+                </button>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer>
+    Personal reference page – not an official U.S. Navy website. Always defer to current instructions and your chain of command.
+</footer>
+
 </body>
 </html>
-
