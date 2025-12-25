@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Encrypt / Decrypt (AES-GCM)</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f4f8; max-width: 980px; margin: 0 auto; }
+    textarea, input[type="text"], input[type="password"] {
+      width: 100%; margin-bottom: 12px; padding: 10px; font-family: monospace; font-size: 1em;
+      border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box;
+    }
+    textarea { min-height: 120px; }
+    button {
+      padding: 10px 14px; font-size: 1em; cursor: pointer; border: 0; border-radius: 10px;
+      background: #1f2937; color: white; margin-right: 8px; margin-bottom: 10px;
+    }
+    button.secondary { background: #334155; }
+    button.ghost { background: #e2e8f0; color: #111827; }
+    label { font-weight: bold; display: block; margin: 10px 0 6px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .row > * { flex: 1; min-width: 220px; }
+    .hint { color: #475569; font-size: 0.95em; margin-top: -6px; margin-bottom: 10px; }
+    .card { background: white; padding: 16px; border-radius: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.08); margin-bottom: 16px; }
+    .mode { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom: 6px; }
+    .mode input { width: auto; margin: 0; }
+    .small { font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <h1>Encrypt / Decrypt (AES-GCM)</h1>
+
+  <div class="card">
+    <div class="mode">
+      <label style="margin:0;">Mode:</label>
+      <label class="small"><input type="radio" name="mode" value="key" checked> Random Key (recommended)</label>
+      <label class="small"><input type="radio" name="mode" value="password"> Password (PBKDF2)</label>
+    </div>
+
+    <div id="keyMode">
+      <label for="key">Key (Base64URL, 32 bytes)</label>
+      <input type="text" id="key" placeholder="Click Generate Key, or paste your saved key here" />
+      <div class="row">
+        <button onclick="generateKey()">Generate Key</button>
+        <button class="ghost" onclick="copyField('key')">Copy Key</button>
+        <button class="secondary" onclick="clearField('key')">Clear</button>
+      </div>
+      <div class="hint">Save this key somewhere safe. Anyone with it can decrypt.</div>
+    </div>
+
+    <div id="passwordMode" style="display:none;">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="Enter a strong password" />
+      <div class="hint">Uses PBKDF2-SHA256 (100,000 iterations) + random salt.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <label for="plaintext">Plaintext</label>
+    <textarea id="plaintext" placeholder="Enter text to encrypt..."></textarea>
+
+    <div class="row">
+      <button onclick="encrypt()">Encrypt →</button>
+      <button class="secondary" onclick="decrypt()">← Decrypt</button>
+      <button class="ghost" onclick="swapFields()">Swap</button>
+      <button class="ghost" onclick="clearAll()">Clear All</button>
+    </div>
+
+    <label for="ciphertext">Ciphertext</label>
+    <textarea id="ciphertext" placeholder="Encrypted output will appear here (format: v1.salt.iv.ct)"></textarea>
+
+    <div class="row">
+      <button class="ghost" onclick="copyField('ciphertext')">Copy Ciphertext</button>
+      <button class="ghost" onclick="copyField('plaintext')">Copy Plaintext</button>
+    </div>
+
+    <div class="hint">
+      Output format: <code>v1.&lt;salt_b64url&gt;.&lt;iv_b64url&gt;.&lt;ct_b64url&gt;</code><br/>
+      (In key mode, salt is included but not used; kept for a consistent format.)
+    </div>
+  </div>
+
+  <script>
+    // ---------- Helpers: Base64URL ----------
+    function bytesToB64url(bytes) {
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      const b64 = btoa(binary);
+      return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+    }
+
+    function b64urlToBytes(b64url) {
+      const b64 = b64url.replace(/-/g, "+").replace(/_/g, "/")
+        + "===".slice((b64url.length + 3) % 4);
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    }
+
+    function concatBytes(...arrays) {
+      const total = arrays.reduce((sum, a) => sum + a.length, 0);
+      const out = new Uint8Array(total);
+      let offset = 0;
+      for (const a of arrays) { out.set(a, offset); offset += a.length; }
+      return out;
+    }
+
+    // ---------- UI helpers ----------
+    function getMode() {
+      return document.querySelector('input[name="mode"]:checked').value;
+    }
+
+    function setModeUI() {
+      const mode = getMode();
+      document.getElementById("keyMode").style.display = (mode === "key") ? "block" : "none";
+      document.getElementById("passwordMode").style.display = (mode === "password") ? "block" : "none";
+    }
+
+    document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener("change", setModeUI));
+
+    function clearField(id) { document.getElementById(id).value = ""; }
+    function copyField(id) {
+      const el = document.getElementById(id);
+      el.select();
+      el.setSelectionRange(0, 999999);
+      navigator.clipboard.writeText(el.value || "");
+    }
+    function swapFields() {
+      const a = document.getElementById("plaintext");
+      const b = document.getElementById("ciphertext");
+      const
