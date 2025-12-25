@@ -129,4 +129,124 @@
     function swapFields() {
       const a = document.getElementById("plaintext");
       const b = document.getElementById("ciphertext");
-      const
+      const tmp = a.value; a.value = b.value; b.value = tmp;
+    }
+    function clearAll() {
+      ["plaintext","ciphertext","key","password"].forEach(clearField);
+    }
+
+    // ---------- Key generation ----------
+    function generateKey() {
+      const keyBytes = crypto.getRandomValues(new Uint8Array(32)); // 256-bit
+      document.getElementById("key").value = bytesToB64url(keyBytes);
+    }
+
+    // ---------- KDFs ----------
+    async function importAesKeyFromRaw(raw32) {
+      if (!(raw32 instanceof Uint8Array) || raw32.length !== 32) {
+        throw new Error("Key must be exactly 32 bytes (Base64URL encoding of 32 random bytes).");
+      }
+      return crypto.subtle.importKey("raw", raw32, { name: "AES-GCM" }, false, ["encrypt","decrypt"]);
+    }
+
+    async function deriveKeyFromPassword(password, salt) {
+      const enc = new TextEncoder();
+      const keyMaterial = await crypto.subtle.importKey(
+        "raw",
+        enc.encode(password),
+        { name: "PBKDF2" },
+        false,
+        ["deriveKey"]
+      );
+      return crypto.subtle.deriveKey(
+        { name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" },
+        keyMaterial,
+        { name: "AES-GCM", length: 256 },
+        false,
+        ["encrypt","decrypt"]
+      );
+    }
+
+    // ---------- Envelope format ----------
+    // v1.<salt_b64url>.<iv_b64url>.<ct_b64url>
+    function packV1(salt, iv, ctBytes) {
+      return `v1.${bytesToB64url(salt)}.${bytesToB64url(iv)}.${bytesToB64url(ctBytes)}`;
+    }
+
+    function unpackV1(str) {
+      const parts = (str || "").trim().split(".");
+      if (parts.length !== 4 || parts[0] !== "v1") throw new Error("Ciphertext must be in format: v1.salt.iv.ct");
+      return {
+        salt: b64urlToBytes(parts[1]),
+        iv: b64urlToBytes(parts[2]),
+        ct: b64urlToBytes(parts[3]),
+      };
+    }
+
+    // ---------- Encrypt / Decrypt ----------
+    async function encrypt() {
+      try {
+        const mode = getMode();
+        const plaintext = document.getElementById("plaintext").value;
+        if (!plaintext) { alert("Enter plaintext."); return; }
+
+        const enc = new TextEncoder();
+        const ptBytes = enc.encode(plaintext);
+
+        const salt = crypto.getRandomValues(new Uint8Array(16)); // used for PBKDF2; kept always for consistent format
+        const iv = crypto.getRandomValues(new Uint8Array(12));   // AES-GCM recommended IV size
+
+        let aesKey;
+        if (mode === "key") {
+          const keyB64 = document.getElementById("key").value.trim();
+          if (!keyB64) { alert("Generate/paste a key first."); return; }
+          const raw = b64urlToBytes(keyB64);
+          aesKey = await importAesKeyFromRaw(raw);
+        } else {
+          const pw = document.getElementById("password").value;
+          if (!pw) { alert("Enter a password."); return; }
+          aesKey = await deriveKeyFromPassword(pw, salt);
+        }
+
+        const ctBuf = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, aesKey, ptBytes);
+        const ctBytes = new Uint8Array(ctBuf);
+
+        document.getElementById("ciphertext").value = packV1(salt, iv, ctBytes);
+      } catch (e) {
+        alert("Encrypt failed: " + (e && e.message ? e.message : e));
+      }
+    }
+
+    async function decrypt() {
+      try {
+        const mode = getMode();
+        const cipher = document.getElementById("ciphertext").value;
+        if (!cipher) { alert("Paste ciphertext."); return; }
+
+        const { salt, iv, ct } = unpackV1(cipher);
+
+        let aesKey;
+        if (mode === "key") {
+          const keyB64 = document.getElementById("key").value.trim();
+          if (!keyB64) { alert("Paste your key first."); return; }
+          const raw = b64urlToBytes(keyB64);
+          aesKey = await importAesKeyFromRaw(raw);
+        } else {
+          const pw = document.getElementById("password").value;
+          if (!pw) { alert("Enter the password used to encrypt."); return; }
+          aesKey = await deriveKeyFromPassword(pw, salt);
+        }
+
+        const ptBuf = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, aesKey, ct);
+        const dec = new TextDecoder();
+        document.getElementById("plaintext").value = dec.decode(ptBuf);
+      } catch (e) {
+        alert("Decrypt failed (wrong key/password or corrupted ciphertext): " + (e && e.message ? e.message : e));
+      }
+    }
+
+    // init
+    setModeUI();
+  </script>
+</body>
+</html>
